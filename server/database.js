@@ -18,9 +18,14 @@ class Database {
           name TEXT NOT NULL,
           email TEXT UNIQUE NOT NULL,
           google_calendar_id TEXT,
+          google_access_token TEXT,
+          google_refresh_token TEXT,
+          calendar_connected BOOLEAN DEFAULT 0,
+          calendar_sync_enabled BOOLEAN DEFAULT 1,
           is_active BOOLEAN DEFAULT 1,
           meeting_count INTEGER DEFAULT 0,
-          created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+          created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+          calendar_connected_at DATETIME
         )
       `);
 
@@ -80,6 +85,30 @@ class Database {
 
   updateMeetingCount(memberId, callback) {
     this.db.run("UPDATE team_members SET meeting_count = meeting_count + 1 WHERE id = ?", [memberId], callback);
+  }
+
+  // Calendar integration methods
+  updateMemberCalendarTokens(memberId, accessToken, refreshToken, calendarId, callback) {
+    const stmt = this.db.prepare(`
+      UPDATE team_members
+      SET google_access_token = ?, google_refresh_token = ?, google_calendar_id = ?,
+          calendar_connected = 1, calendar_connected_at = CURRENT_TIMESTAMP
+      WHERE id = ?
+    `);
+    stmt.run([accessToken, refreshToken, calendarId, memberId], callback);
+    stmt.finalize();
+  }
+
+  getMemberByEmail(email, callback) {
+    this.db.get("SELECT * FROM team_members WHERE email = ?", [email], callback);
+  }
+
+  getTeamMembersWithCalendar(callback) {
+    this.db.all("SELECT * FROM team_members WHERE is_active = 1 AND calendar_connected = 1", callback);
+  }
+
+  updateMemberCalendarSyncStatus(memberId, enabled, callback) {
+    this.db.run("UPDATE team_members SET calendar_sync_enabled = ? WHERE id = ?", [enabled, memberId], callback);
   }
 
   // Meeting operations

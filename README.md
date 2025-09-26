@@ -4,11 +4,12 @@ A web application that allows customers to book meetings and enables team member
 
 ## Features
 
-- **Customer Booking**: Customers can view available time slots and book meetings
+- **Customer Booking**: Customers can view available time slots and book meetings (public access)
 - **Team Self-Selection**: Team members can view pending meetings and self-select which ones to join
 - **Round-Robin Assignment**: Fair distribution of meeting assignments across team members
 - **Google Calendar Integration**: Automatic calendar event creation and synchronization
 - **Admin Interface**: Manage team members and view scheduling statistics
+- **Secure Authentication**: Team dashboard and admin panel restricted to @sentry.io email addresses
 
 ## Setup
 
@@ -37,9 +38,19 @@ A web application that allows customers to book meetings and enables team member
 
 ## Usage
 
-- **Customer Interface**: `http://localhost:3000/book`
-- **Team Interface**: `http://localhost:3000/team`
-- **Admin Interface**: `http://localhost:3000/admin`
+- **Customer Interface**: `http://localhost:3000/book` (public access)
+- **Team Interface**: `http://localhost:3000/team` (requires @sentry.io login)
+- **Admin Interface**: `http://localhost:3000/admin` (requires @sentry.io login)
+- **Team Login**: `http://localhost:3000/login`
+
+### Authentication
+
+Team dashboard and admin panel are protected by Google OAuth and restricted to users with @sentry.io email addresses. The authentication flow:
+
+1. Click "Team Login" in the navigation
+2. Sign in with Google using a @sentry.io email address
+3. Get redirected to the team dashboard upon successful authentication
+4. Access token is stored securely and automatically included in API requests
 
 ## API Endpoints
 

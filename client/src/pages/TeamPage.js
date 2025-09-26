@@ -22,8 +22,11 @@ import {
 import { CalendarToday, Person, Email, Schedule } from '@mui/icons-material';
 import moment from 'moment';
 import { meetingAPI, teamAPI, authAPI } from '../utils/api';
+import CalendarConnection from '../components/CalendarConnection';
+import { useAuth } from '../contexts/AuthContext';
 
 const TeamPage = () => {
+  const { user } = useAuth();
   const [meetings, setMeetings] = useState([]);
   const [teamMembers, setTeamMembers] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -123,6 +126,9 @@ const TeamPage = () => {
 
   const nextMember = getNextMemberInRotation();
 
+  // Find current user's team member record
+  const currentTeamMember = teamMembers.find(member => member.email === user?.email);
+
   return (
     <Box>
       <Typography variant="h4" component="h1" gutterBottom align="center">
@@ -130,13 +136,21 @@ const TeamPage = () => {
       </Typography>
 
       {message && (
-        <Alert 
-          severity={message.type} 
+        <Alert
+          severity={message.type}
           sx={{ mb: 3 }}
           onClose={() => setMessage(null)}
         >
           {message.text}
         </Alert>
+      )}
+
+      {/* Individual Calendar Connection */}
+      {currentTeamMember && (
+        <CalendarConnection
+          teamMember={currentTeamMember}
+          onStatusChange={loadData}
+        />
       )}
 
       {/* Google Calendar Connection */}
@@ -317,15 +331,37 @@ const TeamPage = () => {
               {teamMembers.map((member) => (
                 <Grid item xs={12} sm={6} md={4} key={member.id}>
                   <Paper sx={{ p: 2 }}>
-                    <Typography variant="body1" fontWeight="bold">
-                      {member.name}
-                    </Typography>
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 1 }}>
+                      <Typography variant="body1" fontWeight="bold">
+                        {member.name}
+                      </Typography>
+                      {member.calendar_connected ? (
+                        <Chip
+                          label="Calendar"
+                          size="small"
+                          color={member.calendar_sync_enabled ? "success" : "warning"}
+                          variant="outlined"
+                        />
+                      ) : (
+                        <Chip
+                          label="No Calendar"
+                          size="small"
+                          color="default"
+                          variant="outlined"
+                        />
+                      )}
+                    </Box>
                     <Typography variant="body2" color="textSecondary">
                       {member.email}
                     </Typography>
                     <Typography variant="h6" color="primary">
                       {member.meeting_count} meetings
                     </Typography>
+                    {member.calendar_connected && (
+                      <Typography variant="caption" color="textSecondary">
+                        Availability sync: {member.calendar_sync_enabled ? 'On' : 'Off'}
+                      </Typography>
+                    )}
                   </Paper>
                 </Grid>
               ))}
